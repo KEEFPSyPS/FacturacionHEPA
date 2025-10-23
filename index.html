@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facturación - Refaccionarias HEPA</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <!-- Lucide Icons CDN (con defer para asegurar que se cargue antes de usarlo) -->
+    <script defer src="https://unpkg.com/lucide@latest/dist/lucide.min.js"></script>
+    <!-- jsPDF CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <style>
+        /* Estilos para la fuente Inter */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Clase para ocultar vistas */
+        .hidden-view {
+            display: none;
+        }
+        /* Estilos del modal */
+        .modal {
+            transition: opacity 0.25s ease;
+        }
+        .modal-content {
+            transition: transform 0.25s ease;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen text-gray-800">
+
+    <!-- Encabezado -->
+    <header class="bg-white shadow-md">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex-shrink-0 flex items-center">
+                    <span class="text-2xl font-extrabold text-blue-700 tracking-tight">Refaccionarias HEPA</span>
+                </div>
+                <div class="hidden sm:block">
+                    <div class="flex space-x-4">
+                        <button data-view="customerView" class="nav-link text-gray-600 hover:bg-blue-50 hover:text-blue-700 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200">Solicitar Factura</button>
+                        <button data-view="statusView" class="nav-link text-gray-600 hover:bg-blue-50 hover:text-blue-700 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200">Consultar Estatus</button>
+                        <button data-view="adminLoginView" class="nav-link text-gray-600 hover:bg-blue-50 hover:text-blue-700 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200" id="adminNavButton">Admin</button>
+                    </div>
+                </div>
+                <!-- Menú móvil -->
+                <div class="sm:hidden">
+                    <label for="mobileNav" class="sr-only">Navegación móvil</label>
+                    <select id="mobileNav" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="customerView">Solicitar Factura</option>
+                        <option value="statusView">Consultar Estatus</option>
+                        <option value="adminLoginView">Admin</option>
+                    </select>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Contenedor Principal -->
+    <main class="container mx-auto p-4 sm:p-6 lg:p-8">
+
+        <!-- ============================================= -->
+        <!-- VISTA 1: FORMULARIO CLIENTE                   -->
+        <!-- ============================================= -->
+        <div id="customerView" class="view-container max-w-2xl mx-auto my-8">
+            <div class="bg-white p-6 sm:p-8 rounded-lg shadow-lg border border-gray-200">
+                <h1 class="text-2xl font-bold text-gray-900 mb-6 text-center">Solicitar Factura</h1>
+                <p class="text-gray-600 text-base mb-6 text-center">Introduce los datos de tu ticket y tu información fiscal para generar tu factura.</p>
+
+                <!-- Indicador de Pasos -->
+                <div class="border-b border-gray-200 mb-8">
+                    <nav class="-mb-px flex space-x-6" aria-label="Tabs">
+                        <a href="#" id="step-tab-1" class="step-tab border-blue-500 text-blue-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Paso 1: Ticket</a>
+                        <a href="#" id="step-tab-2" class="step-tab border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Paso 2: Datos Fiscales</a>
+                        <a href="#" id="step-tab-3" class="step-tab border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Paso 3: Confirmar</a>
+                    </nav>
+                </div>
+
+                <form id="invoiceForm">
+                    <!-- ================= PASO 1: DATOS DEL TICKET ================= -->
+                    <div id="step-1" class="step-content space-y-4">
+                        <h2 class="text-lg font-semibold text-gray-800">Datos de tu Compra</h2>
+                        <div>
+                            <label for="ticketNumber" class="block text-sm font-medium text-gray-700">Número de Ticket/Orden <span class="text-red-500">*</span></label>
+                            <input type="text" id="ticketNumber" required class="mt-1 block w-full rounded-md border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 placeholder-gray-400" placeholder="Ej: 123456789">
+                        </div>
+                        <div>
+                            <label for="customerEmail" class="block text-sm font-medium text-gray-700">Correo Electrónico (para recibir tu factura) <span class="text-red-500">*</span></label>
+                            <input type="email" id="customerEmail" required class="mt-1 block w-full rounded-md border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 placeholder-gray-400" placeholder="ejemplo@dominio.com">
+                        </div>
+                        
+                        <div>
+                            <label for="fechaCompra" class="block text-sm font-medium text-gray-700">Fecha de Compra <span class="text-red-500">*</span></label>
+                            <input type="date" id="fechaCompra" required class="mt-1 block w-full rounded-md border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label for="departamento" class="block text-sm font-medium text-gray-700">Departamento</label>
+                            <select id="departamento" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                <option value="">Selecciona uno...</option>
+                                <option value="Volkswagen">Volkswagen</option>
+                                <option value="Nissan">Nissan</option>
+                                <option value="Chevrolet">Chevrolet</option>
+                                <option value="Toyota">Toyota</option>
+                                <option value="Renault">Renault</option>
+                                <option value="Otro">Otro/Varios</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- ================= PASO 2: DATOS FISCALES ================= -->
+                    <div id="step-2" class="step-content hidden-view space-y-4">
+                        <h2 class="text-lg font-semibold text-gray-800">Tus Datos Fiscales</h2>
+                        <div>
+                            <label for="rfc" class="block text-sm font-medium text-gray-700">RFC <span class="text-red-500">*</span></label>
+                            <input type="text" id="rfc" required minlength="12" maxlength="13" pattern="[A-Z&Ñ]{3,4}[0-9]{2}(0[1-9]|1[012])(0[1-9]|[12][0-9]|3[01])[A-Z0-9]{2}[0-9A]" 
+                                   title="RFC inválido. Formato esperado: XXXA010101XXX o XXXX010101XXX"
+                                   class="mt-1 block w-full rounded-md border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 uppercase placeholder-gray-400" placeholder="Ej: XAXX010101000">
+                        </div>
+                        <div>
+                            <label for="razonSocial" class="block text-sm font-medium text-gray-700">Razón Social (Nombre) <span class="text-red-500">*</span></label>
+                            <input type="text" id="razonSocial" required class="mt-1 block w-full rounded-md border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 placeholder-gray-400" placeholder="Ej: EMPRESA S.A. DE C.V.">
+                        </div>
+                        <div>
+                            <label for="direccion" class="block text-sm font-medium text-gray-700">Dirección (Calle y Número) <span class="text-red-500">*</span></label>
+                            <input type="text" id="direccion" required class="mt-1 block w-full rounded-md border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 placeholder-gray-400" placeholder="Ej: Av. Siempre Viva 742">
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="codigoPostal" class="block text-sm font-medium text-gray-700">Código Postal <span class="text-red-500">*</span></label>
+                                <input type="text" id="codigoPostal" required pattern="[0-9]{5}" title="Debe ser un código postal de 5 dígitos" class="mt-1 block w-full rounded-md border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 placeholder-gray-400" placeholder="Ej: 01234">
+                                <p id="cpError" class="text-xs text-red-500 mt-1 hidden"></p>
+                            </div>
+                            <div>
+                                <label for="colonia" class="block text-sm font-medium text-gray-700">Barrio o Colonia</label>
+                                <input type="text" id="colonia" required readonly class="mt-1 block w-full rounded-md border-gray-200 shadow-sm bg-gray-100 focus:outline-none">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="estado" class="block text-sm font-medium text-gray-700">Estado</label>
+                                <input type="text" id="estado" required readonly class="mt-1 block w-full rounded-md border-gray-200 shadow-sm bg-gray-100 focus:outline-none">
+                            </div>
+                            <div id="municipioContainer" class="hidden">
+                                <label for="municipio" class="block text-sm font-medium text-gray-700">Municipio <span class="text-red-500">*</span></label>
+                                <select id="municipio" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                    <!-- Opciones se cargarán dinámicamente -->
+                                </select>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="regimenFiscal" class="block text-sm font-medium text-gray-700">Régimen Fiscal</label>
+                                <select id="regimenFiscal" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                    <option value="">Selecciona uno...</option>
+                                    <option value="601">601 - General de Ley Personas Morales</option>
+                                    <option value="603">603 - Personas Morales con Fines no Lucrativos</option>
+                                    <option value="605">605 - Sueldos y Salarios e Ingresos Asimilados a Salarios</option>
+                                    <option value="606">606 - Arrendamiento</option>
+                                    <option value="608">608 - Demás ingresos</option>
+                                    <option value="610">610 - Residentes en el Extranjero sin Establecimiento Permanente en México</option>
+                                    <option value="611">611 - Ingresos por Dividendos (socios y accionistas)</option>
+                                    <option value="612">612 - Personas Físicas con Actividades Empresariales y Profesionales</option>
+                                    <option value="614">614 - Ingresos por intereses</option>
+                                    <option value="615">615 - Régimen de los Ingresos por Obtención de Premios</option>
+                                    <option value="616">616 - Sin obligaciones fiscales</option>
+                                    <option value="620">620 - Sociedades Cooperativas de Producción que optan por diferir sus ingresos</option>
+                                    <option value="621">621 - Incorporación Fiscal</option>
+                                    <option value="622">622 - Actividades Agrícolas, Ganaderas, Silvícolas y Pesqueras</option>
+                                    <option value="623">623 - Opcional para Grupos de Sociedades</option>
+                                    <option value="624">624 - Coordinados</option>
+                                    <option value="625">625 - Régimen de las Actividades Empresariales con ingresos a través de Plataformas Tecnológicas</option>
+                                    <option value="626">626 - Régimen Simplificado de Confianza (RESICO)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="usoCFDI" class="block text-sm font-medium text-gray-700">Uso de CFDI</label>
+                                <select id="usoCFDI" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                    <option value="">Selecciona uno...</option>
+                                    <option value="G01">G01 - Adquisición de mercancías</option>
+                                    <option value="G03">G03 - Gastos en general</option>
+                                    <option value="I08">I08 - Otra maquinaria y equipo</option>
+                                    <option value="S01">S01 - Sin efectos fiscales</option>
+                                    <!-- Agrega más opciones comunes si es necesario -->
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ================= PASO 3: CONFIRMACIÓN ================= -->
+                    <div id="step-3" class="step-content hidden-view space-y-4">
+                        <h2 class="text-lg font-semibold text-gray-800">Verifica tus Datos</h2>
+                        <p class="text-sm text-gray-600">Por favor, revisa que toda la información sea correcta antes de enviar tu solicitud.</p>
+                        <div id="summary-container" class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200 space-y-2 text-sm">
+                            <!-- El resumen se generará aquí -->
+                        </div>
+                        <div>
+                            <label for="comentarios" class="block text-sm font-medium text-gray-700">Comentarios Adicionales (Opcional)</label>
+                            <textarea id="comentarios" rows="3" class="mt-1 block w-full rounded-md border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 placeholder-gray-400" placeholder="Ej: La compra incluye varios artículos, necesito la factura desglosada."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Botones de Navegación y Envío -->
+                    <div id="form-navigation" class="pt-6 flex justify-between items-center">
+                        <button type="button" id="prevBtn" class="py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">Anterior</button>
+                        <button type="button" id="nextBtn" class="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">Siguiente</button>
+                        <button type="submit" id="submitInvoiceBtn" class="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-md shadow-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200" aria-label="Solicitar Factura">
+                            <span id="submitBtnText">Solicitar Factura</span>
+                            <svg id="submitLoading" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        </button>
+                    </div>                    
+                </form>
+                <!-- Mensaje de respuesta (con iconos) -->
+                <div id="formResponse" class="mt-6 hidden p-4 rounded-md flex items-center"></div>
+            </div>
+        </div>
+
+        <!-- ============================================= -->
+        <!-- VISTA 2: CONSULTAR ESTATUS                    -->
+        <!-- ============================================= -->
+        <div id="statusView" class="view-container hidden-view max-w-2xl mx-auto my-8">
+            <div class="bg-white p-6 sm:p-8 rounded-lg shadow-lg border border-gray-200">
+                <h1 class="text-2xl font-bold text-gray-900 mb-6 text-center">Consultar Estatus de Solicitud</h1>
+                <p class="text-gray-600 text-base mb-6 text-center">Ingresa el folio que te proporcionamos al registrar tu solicitud.</p>
+                
+                <form id="statusForm" class="space-y-4">
+                    <div>
+                        <label for="folioInput" class="block text-sm font-medium text-gray-700">Folio de Seguimiento <span class="text-red-500">*</span></label>
+                        <input type="text" id="folioInput" required class="mt-1 block w-full rounded-md border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 placeholder-gray-400" placeholder="Ej: abcdef1234567890">
+                    </div>
+                    
+                    <div class="pt-4">
+                        <button type="submit" id="checkStatusBtn" class="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-md shadow-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200" aria-label="Consultar Estatus">
+                            <span>Consultar</span>
+                        </button>
+                    </div>
+                </form>
+                
+                <!-- Resultado de la consulta -->
+                <div id="statusResult" class="mt-6 hidden p-5 rounded-lg border"></div>
+            </div>
+        </div>
+
+        <!-- ============================================= -->
+        <!-- VISTA 3: LOGIN ADMIN                          -->
+        <!-- ============================================= -->
+        <div id="adminLoginView" class="view-container hidden-view max-w-md mx-auto my-8">
+            <div class="bg-white p-6 sm:p-8 rounded-lg shadow-lg border border-gray-200">
+                <h1 class="text-2xl font-bold text-gray-900 mb-6 text-center">Acceso Administrador</h1>
+                
+                <form id="adminLoginForm" class="space-y-4">
+                    <div>
+                        <label for="adminEmail" class="block text-sm font-medium text-gray-700">Correo Electrónico <span class="text-red-500">*</span></label>
+                        <input type="email" id="adminEmail" required class="mt-1 block w-full rounded-md border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 placeholder-gray-400" placeholder="admin@hepa.com">
+                    </div>
+                    <div>
+                        <label for="adminPassword" class="block text-sm font-medium text-gray-700">Contraseña <span class="text-red-500">*</span></label>
+                        <input type="password" id="adminPassword" required class="mt-1 block w-full rounded-md border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 placeholder-gray-400" placeholder="••••••••">
+                    </div>
+                    
+                    <div class="pt-4">
+                        <button type="submit" class="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-md shadow-md text-sm font-medium text-white bg-gray-800 hover:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all duration-200" aria-label="Iniciar Sesión">
+                            Iniciar Sesión
+                        </button>
+                    </div>
+                </form>
+                <div id="loginError" class="mt-4 text-red-600 text-sm text-center hidden"></div>
+            </div>
+        </div>
+
+        <!-- ============================================= -->
+        <!-- VISTA 4: DASHBOARD ADMIN                      -->
+        <!-- ============================================= -->
+        <div id="adminDashboardView" class="view-container hidden-view">
+            <div class="flex justify-between items-center mb-6 mt-8">
+                <h1 class="text-3xl font-bold text-gray-900">Panel de Solicitudes</h1>
+                <button id="logoutButton" class="py-2 px-4 border border-transparent rounded-md shadow-md text-sm font-medium text-white bg-red-600 hover:bg-red-700 active:bg-red-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-200" aria-label="Cerrar Sesión">
+                    Cerrar Sesión
+                </button>
+            </div>
+
+            <!-- Barra de búsqueda -->
+            <div class="mb-6">
+                <label for="adminSearch" class="block text-sm font-medium text-gray-700 sr-only">Buscar solicitud (por Folio, RFC, Razón Social, Correo o Ticket)</label>
+                <div class="mt-1 relative rounded-md shadow-sm">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i data-lucide="search" class="h-5 w-5 text-gray-400"></i>
+                    </div>
+                    <input type="search" id="adminSearch" class="block w-full pl-10 p-3 border-gray-200 rounded-md focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400" placeholder="Buscar por Folio, RFC, Razón Social, Correo o Ticket...">
+                </div>
+            </div>
+
+            <!-- Tabla de solicitudes -->
+            <div class="bg-white shadow-lg rounded-lg overflow-x-auto border border-gray-200">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-100">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Folio</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Fecha Solicitud</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">RFC</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Razón Social</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Estatus</th>
+                            <th scope="col" class="px-6 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Borrar</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="requestsTableBody" class="bg-white divide-y divide-gray-200">
+                        <!-- Filas se insertarán dinámicamente -->
+                        <tr>
+                            <td colspan="7" class="px-6 py-12 text-center text-gray-500">Cargando solicitudes...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- ============================================= -->
+    <!-- MODAL DETALLES ADMIN                          -->
+    <!-- ============================================= -->
+    <div id="adminModal" class="modal fixed inset-0 z-50 overflow-y-auto bg-gray-900 bg-opacity-50 hidden-view opacity-0" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-center justify-center min-h-screen px-4">
+            <div id="modalContent" class="modal-content bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden max-w-2xl w-full p-6 sm:p-8 transform -translate-y-10">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-2xl font-bold text-gray-900" id="modalTitle">Detalle de Solicitud</h2>
+                    <button id="closeModalBtn" class="text-gray-500 hover:text-gray-700 transition-colors duration-200" aria-label="Cerrar Modal">
+                        <i data-lucide="x" class="w-6 h-6"></i>
+                    </button>
+                </div>
+                
+                <div id="modalBody" class="mt-6 space-y-4">
+                    <!-- Detalles se cargarán aquí -->
+                </div>
+                
+                <div class="mt-8 flex flex-col sm:flex-row sm:justify-end gap-3">
+                    <div class="flex-grow sm:max-w-xs">
+                        <label for="updateStatusSelect" class="block text-sm font-medium text-gray-700">Actualizar Estatus</label>
+                        <select id="updateStatusSelect" class="mt-1 block w-full rounded-md border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            <option value="pendiente">Pendiente</option>
+                            <option value="procesada">Procesada</option>
+                            <option value="error">Error (Contactar cliente)</option>
+                        </select>
+                    </div>
+                    <button id="updateStatusBtn" class="py-2 px-4 border border-transparent rounded-md shadow-md text-sm font-medium text-white bg-yellow-500 hover:bg-yellow-600 active:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-400 mt-6 sm:mt-auto transition-all duration-200" aria-label="Actualizar Estatus">
+                        Actualizar
+                    </button>
+                    <button id="generatePdfBtn" class="py-2 px-4 border border-transparent rounded-md shadow-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mt-6 sm:mt-auto transition-all duration-200" aria-label="Generar PDF">
+                        Generar PDF
+                    </button>
+                </div>
+                <div id="modalAlert" class="mt-4 text-sm text-center"></div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ============================================= -->
+    <!-- SCRIPT DE JAVASCRIPT Y FIREBASE               -->
+    <!-- ============================================= -->
+    <script type="module">
+        // Importar funciones de Firebase (UNA SOLA VEZ)
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { 
+            getAuth, 
+            signInWithEmailAndPassword, 
+            onAuthStateChanged, 
+            signOut,
+            signInAnonymously,
+            signInWithCustomToken
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { 
+            getFirestore, 
+            collection, 
+            addDoc, 
+            doc, 
+            getDoc, 
+            onSnapshot, 
+            query,
+            updateDoc,
+            Timestamp,
+            deleteDoc,
+            setLogLevel
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Importar jsPDF
+        const { jsPDF } = window.jspdf;
+
+        // --- Configuración de Firebase ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyBzmZjv0DXILrL6bJ71OOIe_671etOttYs",
+            authDomain: "facturacionhepa.firebaseapp.com",
+            projectId: "facturacionhepa",
+            storageBucket: "facturacionhepa.firebasestorage.app",
+            messagingSenderId: "32836098805",
+            appId: "1:32836098805:web:35a490d01b2e83123d03bc"
+        };
+        
+        // --- CORRECCIÓN: Definir appId aquí para que esté disponible globalmente en el script ---
+        const appId = firebaseConfig.appId;
+
+        // --- CORRECCIÓN: Inicializar Firebase UNA SOLA VEZ ---
+        let app, db, auth;
+        try {
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+            setLogLevel('Debug'); // Habilitar logs para depuración
+        } catch (e) {
+            console.error("Error al inicializar Firebase:", e);
+            document.body.innerHTML = "<h1 class='text-red-500 text-center p-8'>Error crítico al conectar con la base de datos.</h1>";
+        }
+
+        // --- Referencias al DOM ---
+        const views = document.querySelectorAll('.view-container');
+        const navLinks = document.querySelectorAll('.nav-link');
+        const mobileNav = document.getElementById('mobileNav');
+        const adminNavButton = document.getElementById('adminNavButton');
+        const customerView = document.getElementById('customerView');
+        const statusView = document.getElementById('statusView');
+        const adminLoginView = document.getElementById('adminLoginView');
+        const adminDashboardView = document.getElementById('adminDashboardView');
+        
+        // Formulario Cliente
+        const invoiceForm = document.getElementById('invoiceForm');
+        const submitInvoiceBtn = document.getElementById('submitInvoiceBtn');
+        const submitBtnText = document.getElementById('submitBtnText');
+        const submitLoading = document.getElementById('submitLoading');
+        const formResponse = document.getElementById('formResponse');
+        
+        // Formulario Estatus
+        const statusForm = document.getElementById('statusForm');
+        const folioInput = document.getElementById('folioInput');
+        const statusResult = document.getElementById('statusResult');
+
+        // Login Admin
+        const adminLoginForm = document.getElementById('adminLoginForm');
+        const loginError = document.getElementById('loginError');
+        
+        // Dashboard Admin
+        const logoutButton = document.getElementById('logoutButton');
+        const adminSearch = document.getElementById('adminSearch');
+        const requestsTableBody = document.getElementById('requestsTableBody');
+        
+        // Modal Admin
+        const adminModal = document.getElementById('adminModal');
+        const modalContent = document.getElementById('modalContent');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const modalBody = document.getElementById('modalBody');
+        const modalAlert = document.getElementById('modalAlert');
+        const generatePdfBtn = document.getElementById('generatePdfBtn');
+        const updateStatusBtn = document.getElementById('updateStatusBtn');
+        const updateStatusSelect = document.getElementById('updateStatusSelect');
+
+        // --- NUEVO: Referencias para el Asistente (Wizard) ---
+        const stepTabs = document.querySelectorAll('.step-tab');
+        const stepContents = document.querySelectorAll('.step-content');
+        const nextBtn = document.getElementById('nextBtn');
+        const prevBtn = document.getElementById('prevBtn');
+
+        // --- Variables Globales ---
+        let allRequests = []; // Cache local para búsquedas
+        let currentModalRequest = null; // Para guardar datos del modal actual
+        let unsubscribeAdminRequests = null;
+
+        // --- Lógica de Navegación ---
+        function showView(viewId) {
+            views.forEach(view => {
+                if (view.id === viewId) {
+                    view.classList.remove('hidden-view');
+                } else {
+                    view.classList.add('hidden-view');
+                }
+            });
+            // Sincronizar navs
+            navLinks.forEach(link => {
+                if (link.dataset.view === viewId || (viewId === 'adminDashboardView' && link.dataset.view === 'adminLoginView')) {
+                    link.classList.add('bg-blue-100', 'text-blue-700');
+                    link.classList.remove('text-gray-600');
+                } else {
+                    link.classList.remove('bg-blue-100', 'text-blue-700');
+                    link.classList.add('text-gray-600');
+                }
+            });
+            if(mobileNav.value !== viewId) mobileNav.value = viewId;
+
+            // Re-inicializar los iconos cada vez que se cambia de vista por si hay nuevos
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        navLinks.forEach(link => {
+            link.addEventListener('click', (e) => showView(e.target.dataset.view));
+        });
+        
+        mobileNav.addEventListener('change', (e) => showView(e.target.value));
+
+        // --- Lógica de Autenticación ---
+        
+        // Manejar el estado de autenticación
+        // Manejar el estado de autenticación
+        onAuthStateChanged(auth, (user) => {
+            // Verificamos si hay un usuario y si NO es anónimo
+            if (user && !user.isAnonymous) {
+                // Usuario admin está logueado
+                console.log("Admin logueado:", user.email);
+                adminNavButton.textContent = "Dashboard";
+                adminNavButton.dataset.view = "adminDashboardView";
+                mobileNav.options[mobileNav.options.length - 1].text = "Dashboard";
+                mobileNav.options[mobileNav.options.length - 1].value = "adminDashboardView";
+                
+                if (!adminLoginView.classList.contains('hidden-view')) {
+                    showView('adminDashboardView');
+                }
+                // Activamos el lector y guardamos la función para "apagarlo"
+                unsubscribeAdminRequests = loadAdminRequests();
+            } else {
+                // Usuario no logueado (o anónimo)
+                console.log("Usuario no logueado (o anónimo)");
+
+                // SI HAY UN LECTOR ACTIVO, LO APAGAMOS
+                if (unsubscribeAdminRequests) {
+                    unsubscribeAdminRequests();
+                }
+
+                adminNavButton.textContent = "Admin";
+                adminNavButton.dataset.view = "adminLoginView";
+                mobileNav.options[mobileNav.options.length - 1].text = "Admin";
+                mobileNav.options[mobileNav.options.length - 1].value = "adminLoginView";
+                
+                if (!adminDashboardView.classList.contains('hidden-view')) {
+                    showView('adminLoginView');
+                }
+                allRequests = []; 
+                requestsTableBody.innerHTML = '<tr><td colspan="7" class="px-6 py-12 text-center text-gray-500">Inicia sesión para ver las solicitudes.</td></tr>';
+            }
+        });
+
+        // Autenticación inicial (Anónima o con Token)
+        (async () => {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                console.log("Autenticación inicial completada.");
+            } catch (error) {
+                console.error("Error en la autenticación inicial:", error);
+            }
+        })();
+
+        // Login Admin
+        adminLoginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('adminEmail').value;
+            const password = document.getElementById('adminPassword').value;
+            loginError.classList.add('hidden');
+            
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                // onAuthStateChanged se encargará de mostrar el dashboard
+            } catch (error) {
+                console.error("Error de inicio de sesión:", error.message);
+                loginError.textContent = "Correo o contraseña incorrectos.";
+                loginError.classList.remove('hidden');
+            }
+        });
+
+        // Logout Admin
+        // Logout Admin
+        logoutButton.addEventListener('click', async () => {
+            try {
+                await signOut(auth);
+
+                // --- AÑADE ESTAS LÍNEAS PARA LIMPIAR EL FORMULARIO ---
+                document.getElementById('adminEmail').value = '';
+                document.getElementById('adminPassword').value = '';
+                document.getElementById('loginError').classList.add('hidden');
+                // --- FIN DE LAS LÍNEAS AÑADIDAS ---
+
+                // onAuthStateChanged se encargará de mostrar el login y reiniciar el listener de admin
+                await signInAnonymously(auth);
+            } catch (error) {
+                console.error("Error al cerrar sesión:", error);
+            }
+        });
+
+        // --- Lógica Formulario Cliente ---
+        invoiceForm.addEventListener('submit', async (e) => {
+            e.preventDefault(); // Prevenir el envío tradicional
+
+            // Solo proceder si estamos en el último paso
+            if (currentStep !== 3) return;
+            
+            // Mostrar loading
+            submitBtnText.classList.add('hidden');
+            submitLoading.classList.remove('hidden');
+            formResponse.classList.add('hidden');
+
+            const requestData = {
+                ticketNumber: document.getElementById('ticketNumber').value,
+                customerEmail: document.getElementById('customerEmail').value,
+                // --- CAMPOS AÑADIDOS ---
+                fechaCompra: document.getElementById('fechaCompra').value,
+                departamento: document.getElementById('departamento').value,
+                direccion: document.getElementById('direccion').value,
+                colonia: document.getElementById('colonia').value,
+                estado: document.getElementById('estado').value,
+                municipio: document.getElementById('municipio').value,
+                // --- FIN CAMPOS AÑADIDOS ---
+                rfc: document.getElementById('rfc').value.toUpperCase(),
+                razonSocial: document.getElementById('razonSocial').value,
+                codigoPostal: document.getElementById('codigoPostal').value,
+                regimenFiscal: document.getElementById('regimenFiscal').value,
+                comentarios: document.getElementById('comentarios').value,
+                usoCFDI: document.getElementById('usoCFDI').value,
+                status: 'pendiente', // Estatus inicial
+                createdAt: Timestamp.now()
+            };
+
+            try {
+                // Usamos la colección pública según las reglas
+                const collectionPath = `artifacts/${appId}/public/data/invoiceRequests`;
+                const docRef = await addDoc(collection(db, collectionPath), requestData);
+                
+
+                // --- INICIO: CÓDIGO AÑADIDO PARA IMAGEN Y WHATSAPP ---
+
+                const folio = docRef.id;
+
+                // 1. Generar y descargar imagen de confirmación
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Configuración del canvas
+                canvas.width = 600;
+                canvas.height = 350;
+
+                // Fondo y borde
+                ctx.fillStyle = '#f0f9ff'; // Azul muy claro
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.strokeStyle = '#0284c7'; // Azul oscuro
+                ctx.lineWidth = 10;
+                ctx.strokeRect(0, 0, canvas.width, canvas.height);
+
+                // Textos
+                ctx.textAlign = 'center';
+                ctx.fillStyle = '#0369a1';
+                ctx.font = 'bold 36px Inter, sans-serif';
+                ctx.fillText('¡Solicitud Enviada!', canvas.width / 2, 80);
+
+                ctx.fillStyle = '#4b5563';
+                ctx.font = '20px Inter, sans-serif';
+                ctx.fillText('Tu folio de seguimiento es:', canvas.width / 2, 150);
+
+                ctx.fillStyle = '#0c4a6e';
+                ctx.font = 'bold 38px "Courier New", Courier, monospace'; //tamaño mayor y fuente monoespaciada .png folio
+                ctx.fillText(folio, canvas.width / 2, 220);
+
+                ctx.fillStyle = '#6b7280';
+                ctx.font = '16px Inter, sans-serif';
+                ctx.fillText('Consérvalo para futuras consultas - Refaccionarias HEPA', canvas.width / 2, 280);
+
+                // Crear enlace de descarga y simular clic
+                const link = document.createElement('a');
+                link.download = `solicitud-hepa-${folio}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+
+                // --- FIN: CÓDIGO AÑADIDO ---
+
+                formResponse.innerHTML = `
+                    <i data-lucide="check-circle" class="w-5 h-5 mr-2 text-green-500"></i>
+                    <div>
+                        <h3 class="font-medium text-green-800">¡Solicitud Enviada!</h3>
+                        <p class="text-sm text-green-700 mt-1">Tu solicitud ha sido registrada con éxito. Tu folio de seguimiento es: <strong class="font-bold text-green-900">${folio}</strong>. Guárdalo para futuras consultas.</p>
+                    </div>
+                `;
+                formResponse.className = 'mt-6 p-4 rounded-md flex items-center bg-green-50 border border-green-200 text-green-800';
+                invoiceForm.reset();
+                // Ocultar el formulario y los botones de navegación tras el éxito
+                document.getElementById('form-navigation').classList.add('hidden');
+                stepContents.forEach(s => s.classList.add('hidden-view'));
+
+            } catch (error) {
+                console.error("Error al guardar solicitud:", error);
+                formResponse.innerHTML = `
+                    <h3 class="font-medium text-red-800">Error en la Solicitud</h3>
+                    <p class="text-sm text-red-700 mt-1">No pudimos procesar tu solicitud. Por favor, inténtalo de nuevo más tarde. (${error.message})</p>
+                    <i data-lucide="x-circle" class="w-5 h-5 mr-2 text-red-500"></i>
+                `;
+                formResponse.className = 'mt-6 p-4 rounded-md flex items-center bg-red-50 border border-red-200 text-red-800';
+            } finally {
+                // Ocultar loading
+                submitBtnText.classList.remove('hidden');
+                submitLoading.classList.add('hidden');
+            }
+        });
+
+        // --- Lógica del Asistente (Wizard) ---
+        let currentStep = 1;
+
+        function updateWizardView() {
+            stepContents.forEach((content, index) => {
+                if ((index + 1) === currentStep) {
+                    content.classList.remove('hidden-view');
+                } else {
+                    content.classList.add('hidden-view');
+                }
+            });
+
+            stepTabs.forEach((tab, index) => {
+                if ((index + 1) === currentStep) {
+                    tab.classList.add('border-blue-500', 'text-blue-600');
+                    tab.classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+                } else {
+                    tab.classList.remove('border-blue-500', 'text-blue-600');
+                    tab.classList.add('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+                }
+            });
+
+            prevBtn.style.display = currentStep === 1 ? 'none' : 'inline-flex';
+            nextBtn.style.display = currentStep === 3 ? 'none' : 'inline-flex';
+            submitInvoiceBtn.style.display = currentStep === 3 ? 'flex' : 'none';
+
+            if (currentStep === 3) {
+                generateSummary();
+            }
+        }
+
+        function validateStep(step) {
+            const inputs = [...stepContents[step - 1].querySelectorAll('input[required], select[required]')];
+            return inputs.every(input => input.reportValidity());
+        }
+
+        nextBtn.addEventListener('click', () => {
+            if (validateStep(currentStep) && currentStep < 3) {
+                currentStep++;
+                updateWizardView();
+            }
+        });
+
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 1) {
+                currentStep--;
+                updateWizardView();
+            }
+        });
+
+        function generateSummary() {
+            const summaryContainer = document.getElementById('summary-container');
+            const getVal = (id) => document.getElementById(id).value;
+            const getOptionText = (id) => {
+                const select = document.getElementById(id);
+                return select.options[select.selectedIndex]?.text || 'No seleccionado';
+            };
+
+            summaryContainer.innerHTML = `
+                <div class="pb-2 border-b">
+                    <h3 class="font-semibold text-gray-800">Datos de Compra</h3>
+                    <p><strong class="font-medium text-gray-600">Ticket:</strong> ${getVal('ticketNumber')}</p>
+                    <p><strong class="font-medium text-gray-600">Email:</strong> ${getVal('customerEmail')}</p>
+                    <p><strong class="font-medium text-gray-600">Fecha Compra:</strong> ${getVal('fechaCompra')}</p>
+                    <p><strong class="font-medium text-gray-600">Departamento:</strong> ${getVal('departamento')}</p>
+                </div>
+                <div class="pt-2">
+                    <h3 class="font-semibold text-gray-800">Datos Fiscales</h3>
+                    <p><strong class="font-medium text-gray-600">RFC:</strong> ${getVal('rfc').toUpperCase()}</p>
+                    <p><strong class="font-medium text-gray-600">Razón Social:</strong> ${getVal('razonSocial')}</p>
+                    <p><strong class="font-medium text-gray-600">Dirección:</strong> ${getVal('direccion')}, ${getVal('colonia')}, C.P. ${getVal('codigoPostal')}</p>
+                    <p><strong class="font-medium text-gray-600">Municipio:</strong> ${getVal('municipio')}</p>
+                    <p><strong class="font-medium text-gray-600">Estado:</strong> ${getVal('estado')}</p>
+                    <p><strong class="font-medium text-gray-600">Régimen Fiscal:</strong> ${getOptionText('regimenFiscal')}</p>
+                    <p><strong class="font-medium text-gray-600">Uso de CFDI:</strong> ${getOptionText('usoCFDI')}</p>
+                </div>
+                <div class="pt-2 border-t mt-2">
+                    <h3 class="font-semibold text-gray-800">Comentarios</h3>
+                    <p class="text-gray-600 italic">${getVal('comentarios') || 'Sin comentarios.'}</p>
+                </div>
+            `;
+        }
+
+        // Inicializar la vista del asistente
+        updateWizardView();
+
+        // --- Lógica para autocompletar desde Código Postal ---
+        const codigoPostalInput = document.getElementById('codigoPostal');
+        const coloniaInput = document.getElementById('colonia');
+        const estadoInput = document.getElementById('estado');
+        const cpError = document.getElementById('cpError');
+        const municipioContainer = document.getElementById('municipioContainer');
+        const municipioSelect = document.getElementById('municipio');
+
+        codigoPostalInput.addEventListener('blur', async (e) => {
+            const cp = e.target.value;
+            cpError.classList.add('hidden');
+            coloniaInput.value = '';
+            estadoInput.value = '';
+            municipioContainer.classList.add('hidden');
+            municipioSelect.innerHTML = '';
+            if (cp.length === 5 && /^[0-9]+$/.test(cp)) {
+                coloniaInput.placeholder = 'Buscando...';
+                try {
+                    // Usamos una API alternativa más estable para códigos postales de México
+                    const response = await fetch(`https://api.zippopotam.us/mx/${cp}`);
+                    if (!response.ok) throw new Error('No se encontró el C.P.');
+                    
+                    const data = await response.json();
+                    
+                    // 'places' es un array, tomamos los datos del primer lugar encontrado
+                    const place = data.places[0];
+                    const estado = place['state'];
+
+                    coloniaInput.value = place['place name']; // El barrio o colonia
+                    estadoInput.value = estado; // El estado
+                    
+                    // Ahora, buscamos los municipios para el estado encontrado
+                    if (estado) {
+                        municipioSelect.innerHTML = '<option value="">Cargando municipios...</option>';
+                        municipioContainer.classList.remove('hidden');
+                        municipioSelect.required = true; // Hacerlo requerido solo cuando es visible
+                        
+                        // Usamos una API alternativa que permite CORS para obtener los municipios
+                        const municipiosResponse = await fetch(`https://public.opendatasoft.com/api/records/1.0/search/?dataset=georef-mexico-municipality&q=&rows=500&sort=mun_name&facet=sta_name&refine.sta_name=${estado}`);
+                        if (!municipiosResponse.ok) throw new Error('No se pudieron cargar los municipios.');
+                        
+                        const municipiosData = await municipiosResponse.json();
+                        const municipios = municipiosData.records.map(record => record.fields.mun_name).sort();
+                        
+                        municipioSelect.innerHTML = '<option value="">Selecciona un municipio...</option>';
+                        municipios.forEach(mun => {
+                            municipioSelect.innerHTML += `<option value="${mun}">${mun}</option>`;
+                        });
+                    }
+
+                } catch (error) {
+                    console.error("Error con API de CP:", error);
+                    cpError.textContent = 'Código Postal no encontrado.';
+                    municipioContainer.classList.add('hidden');
+                    municipioSelect.required = false; // Quitar el 'required' si hay error
+                    cpError.classList.remove('hidden');
+                }
+            }
+        });
+
+        // --- Lógica Consulta de Estatus ---
+        statusForm.addEventListener('submit', async (e) => { // No changes here, just for context
+            e.preventDefault();
+            const folio = folioInput.value.trim();
+            if (!folio) return;
+
+            statusResult.className = 'mt-6 p-5 rounded-lg border'; // Reseteamos las clases
+            statusResult.textContent = 'Buscando...';
+
+            try {
+                const docPath = `artifacts/${appId}/public/data/invoiceRequests/${folio}`;
+                const docRef = doc(db, docPath);
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    const fecha = data.createdAt.toDate().toLocaleString('es-MX');
+                    let statusText = '';
+                    let statusClass = '';
+
+                    switch(data.status) {
+                        case 'pendiente': {
+                            statusText = '<i data-lucide="hourglass" class="w-5 h-5 mr-2 text-yellow-500"></i> Tu solicitud está <strong>pendiente</strong> de revisión.';
+                            statusClass = 'bg-yellow-50 border-yellow-200 text-yellow-800';
+                            break;
+                        }
+                        case 'procesada': {
+                            statusText = '<i data-lucide="check-circle" class="w-5 h-5 mr-2 text-green-500"></i> Tu solicitud fue <strong>procesada</strong> con éxito. La factura fue enviada a tu correo.';
+                            statusClass = 'bg-green-50 border-green-200 text-green-800';
+                            break;
+                        }
+                        case 'error': {
+                             statusText = '<i data-lucide="x-circle" class="w-5 h-5 mr-2 text-red-500"></i> Hubo un <strong>error</strong> con tu solicitud. Un administrador te contactará.';
+                             statusClass = 'bg-red-50 border-red-200 text-red-800';
+                            break;
+                        }
+                        default: {
+                            statusText = '<i data-lucide="info" class="w-5 h-5 mr-2 text-gray-500"></i> Estatus desconocido.';
+                            statusClass = 'bg-gray-50 border-gray-200 text-gray-800';
+                        }
+                    }
+                    statusResult.innerHTML = `
+                        <div class="flex items-center mb-2">${statusText}</div>
+                        <p class="text-sm text-gray-700 mb-1"><strong>Folio:</strong> ${docSnap.id}</p>
+                        <p class="text-sm text-gray-700"><strong>Fecha de Solicitud:</strong> ${fecha}</p>
+                    `;
+                    // --- LA CORRECCIÓN ESTÁ AQUÍ ---
+                    // Usamos className para asignar todas las clases a la vez.
+                    statusResult.className = `mt-6 p-5 rounded-lg border flex-col items-start ${statusClass}`;
+                    lucide.createIcons(); // Re-renderizar iconos
+
+                } else {
+                    statusResult.textContent = 'No se encontró ninguna solicitud con ese folio.';
+                    statusResult.className = 'mt-6 p-5 rounded-lg border bg-red-100 border-red-300 text-red-800';
+                }
+            } catch (error) {
+                console.error("Error al consultar estatus:", error);
+                statusResult.textContent = 'Error al consultar. Intenta más tarde.';
+                statusResult.className = 'mt-6 p-5 rounded-lg border bg-red-100 border-red-300 text-red-800';
+            }
+        });
+        
+        // --- Lógica Dashboard Admin ---
+
+        // Cargar todas las solicitudes (Real-time)
+        // Cargar todas las solicitudes (Real-time)
+        function loadAdminRequests() {
+            const collectionPath = `artifacts/${appId}/public/data/invoiceRequests`;
+            const q = query(collection(db, collectionPath));
+            
+            // Usamos onSnapshot para escucha en tiempo real
+            // AÑADIMOS "return" AL PRINCIPIO DE LA LÍNEA
+            return onSnapshot(q, (snapshot) => {
+                allRequests = [];
+                if (snapshot.empty) {
+                    requestsTableBody.innerHTML = '<tr><td colspan="7" class="px-6 py-12 text-center text-gray-500">No hay solicitudes pendientes.</td></tr>';
+                    return;
+                }
+                
+                snapshot.forEach((doc) => {
+                    allRequests.push({ id: doc.id, ...doc.data() });
+                });
+                
+                allRequests.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
+                
+                renderTable(allRequests);
+
+            }, (error) => {
+                console.error("Error al cargar solicitudes (onSnapshot):", error);
+                requestsTableBody.innerHTML = '<tr><td colspan="7" class="px-6 py-12 text-center text-red-500">Error al cargar datos.</td></tr>';
+            });
+        }
+        
+        // Renderizar la tabla de solicitudes
+        function renderTable(requests) {
+            requestsTableBody.innerHTML = ''; // Limpiar tabla
+            if (requests.length === 0) {
+                 requestsTableBody.innerHTML = '<tr><td colspan="7" class="px-6 py-12 text-center text-gray-500">No se encontraron solicitudes con ese criterio.</td></tr>';
+                 return;
+            }
+            
+            requests.forEach(req => {
+                const fecha = req.createdAt.toDate().toLocaleDateString('es-MX');
+                let statusBadge = '';
+                switch(req.status) {
+                    case 'pendiente': statusBadge = '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800 border border-yellow-200">Pendiente</span>'; break;
+                    case 'procesada': statusBadge = '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 border border-green-200">Procesada</span>'; break;
+                    case 'error': statusBadge = '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800 border border-red-200">Error</span>'; break;
+                }
+                
+                const row = `
+                    <tr class="hover:bg-gray-50 even:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800">${req.id}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${fecha}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${req.rfc}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${req.razonSocial}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${statusBadge}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                            <button data-id="${req.id}" class="delete-btn text-red-600 hover:text-red-800 transition-colors duration-200 text-sm font-medium" aria-label="Borrar solicitud ${req.id}">Borrar</button>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <button data-id="${req.id}" class="view-btn text-blue-600 hover:text-blue-800 transition-colors duration-200" aria-label="Ver detalles de solicitud ${req.id}">Ver / PDF</button>
+                        </td>
+                    </tr>
+                `;
+                requestsTableBody.innerHTML += row;
+            });
+            // Re-inicializar los iconos de Lucide después de construir la tabla
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        }
+        
+        // Búsqueda en Admin
+        adminSearch.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase().trim();
+            if (!searchTerm) {
+                renderTable(allRequests);
+                return;
+            }
+            
+            const filtered = allRequests.filter(req => {
+                return req.id.toLowerCase().includes(searchTerm) ||
+                       req.rfc.toLowerCase().includes(searchTerm) ||
+                       req.razonSocial.toLowerCase().includes(searchTerm) ||
+                       req.customerEmail.toLowerCase().includes(searchTerm) ||
+                       req.ticketNumber.toLowerCase().includes(searchTerm);
+            });
+            
+            renderTable(filtered);
+        });
+
+        // --- Lógica del Modal Admin ---
+
+        // Mostrar Modal
+        requestsTableBody.addEventListener('click', (e) => {
+            const targetButton = e.target.closest('button');
+            if (!targetButton) return;
+
+            const id = targetButton.dataset.id;
+
+            if (targetButton.classList.contains('delete-btn')) {
+                if (confirm(`¿Estás seguro de que quieres borrar permanentemente la solicitud con folio ${id}?`)) {
+                    const docPath = `artifacts/${appId}/public/data/invoiceRequests/${id}`;
+                    deleteDoc(doc(db, docPath)).catch(err => {
+                        console.error("Error al borrar el documento:", err);
+                        alert("No se pudo borrar la solicitud. Inténtalo de nuevo.");
+                    });
+                }
+            } else if (targetButton.classList.contains('view-btn')) {
+                currentModalRequest = allRequests.find(req => req.id === id);
+                if (!currentModalRequest) return;
+
+                modalBody.innerHTML = `
+                    <p class="text-gray-700"><strong class="font-semibold">Folio:</strong> ${currentModalRequest.id}</p>
+                    <p class="text-gray-700"><strong class="font-semibold">Fecha Solicitud:</strong> ${currentModalRequest.createdAt.toDate().toLocaleString('es-MX')}</p>
+                    <hr class="my-4 border-gray-200">
+                    <p class="text-gray-700"><strong class="font-semibold">Ticket:</strong> ${currentModalRequest.ticketNumber}</p>
+                    <!-- CAMPOS AÑADIDOS -->
+                    <p class="text-gray-700"><strong class="font-semibold">Fecha Compra:</strong> ${currentModalRequest.fechaCompra || 'No especificado'}</p>
+                    <p class="text-gray-700"><strong class="font-semibold">Departamento:</strong> ${currentModalRequest.departamento || 'No especificado'}</p>
+                    <!-- FIN CAMPOS AÑADIDOS -->
+                    <p class="text-gray-700"><strong class="font-semibold">Email Cliente:</strong> ${currentModalRequest.customerEmail}</p>
+                    <hr class="my-4 border-gray-200">
+                    <p class="text-gray-700"><strong class="font-semibold">RFC:</strong> ${currentModalRequest.rfc}</p>
+                    <p class="text-gray-700"><strong class="font-semibold">Razón Social:</strong> ${currentModalRequest.razonSocial}</p>
+                    <p class="text-gray-700"><strong class="font-semibold">C.P.:</strong> ${currentModalRequest.codigoPostal}</p>
+                    <p class="text-gray-700"><strong class="font-semibold">Régimen Fiscal:</strong> ${currentModalRequest.regimenFiscal}</p>
+                    <!-- CAMPOS AÑADIDOS -->
+                    <p class="text-gray-700"><strong class="font-semibold">Dirección:</strong> ${currentModalRequest.direccion || 'No especificado'}</p>
+                    <p class="text-gray-700"><strong class="font-semibold">Colonia:</strong> ${currentModalRequest.colonia || 'No especificado'}</p>
+                    <p class="text-gray-700"><strong class="font-semibold">Estado:</strong> ${currentModalRequest.estado || 'No especificado'}</p>
+                    <p class="text-gray-700"><strong class="font-semibold">Municipio:</strong> ${currentModalRequest.municipio || 'No especificado'}</p>
+                    <p class="text-gray-700"><strong class="font-semibold">Uso CFDI:</strong> ${currentModalRequest.usoCFDI}</p>
+                    <p class="text-gray-700"><strong class="font-semibold">Comentarios:</strong> <span class="italic">${currentModalRequest.comentarios || 'Ninguno'}</span></p>
+                `;
+                updateStatusSelect.value = currentModalRequest.status;
+                modalAlert.className = 'mt-4 text-sm text-center hidden'; // Limpiar y ocultar alerta
+                
+                adminModal.classList.remove('hidden-view');
+                setTimeout(() => {
+                    adminModal.classList.remove('opacity-0');
+                    modalContent.classList.remove('-translate-y-10');
+                }, 10);
+            }
+        });
+
+        // Ocultar Modal
+        function hideModal() {
+            adminModal.classList.add('opacity-0');
+            modalContent.classList.add('-translate-y-10');
+            setTimeout(() => {
+                adminModal.classList.add('hidden-view');
+                currentModalRequest = null;
+            }, 250);
+        }
+        closeModalBtn.addEventListener('click', hideModal);
+        adminModal.addEventListener('click', (e) => {
+            if (e.target === adminModal) hideModal(); // Cerrar al hacer clic fuera
+        });
+        
+        // Generar PDF
+        generatePdfBtn.addEventListener('click', () => {
+            if (!currentModalRequest) return;
+            const data = currentModalRequest;
+            
+            try {
+                const doc = new jsPDF();
+                
+                doc.setFontSize(18);
+                doc.text("Solicitud de Factura - Refaccionaria HEPA", 14, 22);
+                
+                doc.setFontSize(12);
+                doc.text(`Folio de Solicitud: ${data.id}`, 14, 35);
+                doc.text(`Fecha de Solicitud: ${data.createdAt.toDate().toLocaleString('es-MX')}`, 14, 42);
+
+                doc.setFontSize(14);
+                doc.text("Datos del Cliente y Ticket", 14, 60);
+                doc.setFontSize(11);
+                doc.text(`No. de Ticket: ${data.ticketNumber}`, 14, 68);
+                doc.text(`Correo Electrónico: ${data.customerEmail}`, 14, 75);
+                // --- CAMPOS AÑADIDOS ---
+                doc.text(`Fecha de Compra: ${data.fechaCompra || 'N/A'}`, 14, 82);
+                doc.text(`Departamento: ${data.departamento || 'N/A'}`, 14, 89);
+                // --- FIN CAMPOS AÑADIDOS ---
+
+                doc.setFontSize(14);
+                // Ajustar la posición Y de la siguiente sección
+                doc.text("Datos Fiscales del Receptor", 14, 104); 
+                doc.setFontSize(11);
+                doc.text(`RFC: ${data.rfc}`, 14, 112);
+                doc.text(`Razón Social: ${data.razonSocial}`, 14, 119);
+                doc.text(`Código Postal: ${data.codigoPostal}`, 14, 126);
+                // --- CAMPOS AÑADIDOS ---
+                doc.text(`Dirección: ${data.direccion || 'N/A'}`, 14, 133);
+                doc.text(`Colonia: ${data.colonia || 'N/A'}`, 14, 140);
+                doc.text(`Estado: ${data.estado || 'N/A'}`, 14, 147);
+                doc.text(`Municipio: ${data.municipio || 'N/A'}`, 14, 154);
+                doc.text(`Régimen Fiscal: ${data.regimenFiscal}`, 14, 161);
+                doc.text(`Uso de CFDI: ${data.usoCFDI}`, 14, 168);
+                if (data.comentarios) {
+                    doc.text(`Comentarios: ${data.comentarios}`, 14, 175);
+                }
+
+                doc.save(`solicitud-factura-${data.id}.pdf`);
+
+            } catch(e) {
+                console.error("Error al generar PDF: ", e);
+                modalAlert.textContent = "Error al generar el PDF.";
+                modalAlert.classList.add('text-red-600');
+            }
+        });
+        
+        // Actualizar Estatus
+        updateStatusBtn.addEventListener('click', async () => {
+             if (!currentModalRequest) return;
+             
+             const newStatus = updateStatusSelect.value;
+             const docId = currentModalRequest.id;
+             const docPath = `artifacts/${appId}/public/data/invoiceRequests/${docId}`;
+             const docRef = doc(db, docPath);
+             
+             modalAlert.textContent = 'Actualizando...';
+             modalAlert.classList.remove('text-red-600', 'text-green-600');
+
+             try {
+                await updateDoc(docRef, { status: newStatus });
+                modalAlert.innerHTML = '<i data-lucide="check-circle" class="w-4 h-4 mr-1"></i> Estatus actualizado con éxito.';
+                modalAlert.className = 'mt-4 p-2 rounded-md bg-green-50 border border-green-200 text-green-700 flex items-center justify-center';
+                // onSnapshot actualizará la tabla automáticamente
+             } catch(e) {
+                console.error("Error al actualizar estatus: ", e);
+                modalAlert.innerHTML = '<i data-lucide="x-circle" class="w-4 h-4 mr-1"></i> Error al actualizar.';
+                modalAlert.className = 'mt-4 p-2 rounded-md bg-red-50 border border-red-200 text-red-700 flex items-center justify-center';
+             }
+        });
+
+        // --- Inicializar Vista ---
+        showView('customerView'); // Mostrar la vista del cliente al cargar
+
+        // Inicializar Lucide Icons una vez que todo el DOM esté listo
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+
+    </script>
+</body>
+</html>
