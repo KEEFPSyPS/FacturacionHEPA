@@ -47,35 +47,41 @@
                     </div>
                 </div>
                 <!-- Menú móvil -->
-                <div class="sm:hidden">
-                    <label for="mobileNav" class="sr-only">Navegación móvil</label>
-                    <select id="mobileNav" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                        <option value="customerView">Solicitar Factura</option>
-                        <option value="statusView">Consultar Estatus</option>
-                        <option value="adminLoginView">Admin</option>
-                    </select>
+                <div class="sm:hidden relative">
+                    <button id="mobileMenuButton" class="inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:text-blue-700 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500" aria-expanded="false">
+                        <span class="sr-only">Abrir menú principal</span>
+                        <i data-lucide="menu" class="block h-6 w-6"></i>
+                    </button>
+                    <!-- Panel del menú móvil -->
+                    <div id="mobileMenuPanel" class="hidden-view absolute right-0 mt-2 w-48 origin-top-right bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-20">
+                        <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="mobileMenuButton">
+                            <button data-view="customerView" class="mobile-nav-link block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Solicitar Factura</button>
+                            <button data-view="statusView" class="mobile-nav-link block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Consultar Estatus</button>
+                            <button data-view="adminLoginView" id="adminMobileNavButton" class="mobile-nav-link block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Admin</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </nav>
     </header>
 
     <!-- Contenedor Principal -->
-    <main class="container mx-auto p-4 sm:p-6 lg:p-8">
+    <main class="container mx-auto px-4 py-6 sm:px-6 lg:px-8">
 
         <!-- ============================================= -->
         <!-- VISTA 1: FORMULARIO CLIENTE                   -->
         <!-- ============================================= -->
         <div id="customerView" class="view-container max-w-2xl mx-auto my-8">
-            <div class="bg-white p-6 sm:p-8 rounded-lg shadow-lg border border-gray-200">
-                <h1 class="text-2xl font-bold text-gray-900 mb-6 text-center">Solicitar Factura</h1>
-                <p class="text-gray-600 text-base mb-6 text-center">Introduce los datos de tu ticket y tu información fiscal para generar tu factura.</p>
+            <div class="bg-white p-4 sm:p-8 rounded-lg shadow-lg border border-gray-200">
+                <h1 class="text-xl sm:text-2xl font-bold text-gray-900 mb-4 text-center">Solicitar Factura</h1>
+                <p class="text-gray-600 text-sm sm:text-base mb-6 text-center">Introduce los datos de tu ticket y tu información fiscal para generar tu factura.</p>
 
                 <!-- Indicador de Pasos -->
                 <div class="border-b border-gray-200 mb-8">
-                    <nav class="-mb-px flex space-x-6" aria-label="Tabs">
-                        <a href="#" id="step-tab-1" class="step-tab border-blue-500 text-blue-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Paso 1: Ticket</a>
-                        <a href="#" id="step-tab-2" class="step-tab border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Paso 2: Datos Fiscales</a>
-                        <a href="#" id="step-tab-3" class="step-tab border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Paso 3: Confirmar</a>
+                    <nav class="-mb-px flex space-x-2 sm:space-x-6 overflow-x-auto" aria-label="Tabs">
+                        <a href="#" id="step-tab-1" class="step-tab border-blue-500 text-blue-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-xs sm:text-sm">Paso 1: Ticket</a>
+                        <a href="#" id="step-tab-2" class="step-tab border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-xs sm:text-sm">Paso 2: Datos Fiscales</a>
+                        <a href="#" id="step-tab-3" class="step-tab border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-xs sm:text-sm">Paso 3: Confirmar</a>
                     </nav>
                 </div>
 
@@ -224,7 +230,7 @@
         <!-- VISTA 2: CONSULTAR ESTATUS                    -->
         <!-- ============================================= -->
         <div id="statusView" class="view-container hidden-view max-w-2xl mx-auto my-8">
-            <div class="bg-white p-6 sm:p-8 rounded-lg shadow-lg border border-gray-200">
+            <div class="bg-white p-4 sm:p-8 rounded-lg shadow-lg border border-gray-200">
                 <h1 class="text-2xl font-bold text-gray-900 mb-6 text-center">Consultar Estatus de Solicitud</h1>
                 <p class="text-gray-600 text-base mb-6 text-center">Ingresa el folio que te proporcionamos al registrar tu solicitud.</p>
                 
@@ -250,7 +256,7 @@
         <!-- VISTA 3: LOGIN ADMIN                          -->
         <!-- ============================================= -->
         <div id="adminLoginView" class="view-container hidden-view max-w-md mx-auto my-8">
-            <div class="bg-white p-6 sm:p-8 rounded-lg shadow-lg border border-gray-200">
+            <div class="bg-white p-4 sm:p-8 rounded-lg shadow-lg border border-gray-200">
                 <h1 class="text-2xl font-bold text-gray-900 mb-6 text-center">Acceso Administrador</h1>
                 
                 <form id="adminLoginForm" class="space-y-4">
@@ -277,7 +283,7 @@
         <!-- VISTA 4: DASHBOARD ADMIN                      -->
         <!-- ============================================= -->
         <div id="adminDashboardView" class="view-container hidden-view">
-            <div class="flex justify-between items-center mb-6 mt-8">
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 mt-8 gap-4">
                 <h1 class="text-3xl font-bold text-gray-900">Panel de Solicitudes</h1>
                 <button id="logoutButton" class="py-2 px-4 border border-transparent rounded-md shadow-md text-sm font-medium text-white bg-red-600 hover:bg-red-700 active:bg-red-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-200" aria-label="Cerrar Sesión">
                     Cerrar Sesión
@@ -296,15 +302,14 @@
             </div>
 
             <!-- Tabla de solicitudes -->
-            <div class="bg-white shadow-lg rounded-lg overflow-x-auto border border-gray-200">
+            <div class="bg-white shadow-lg rounded-lg overflow-hidden border border-gray-200">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-100">
                         <tr>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Folio</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Fecha Solicitud</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">RFC</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Razón Social</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Estatus</th>
+                            <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Solicitud</th>
+                            <th scope="col" class="hidden md:table-cell px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">RFC</th>
+                            <th scope="col" class="hidden lg:table-cell px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Razón Social</th>
+                            <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Estatus</th>
                             <th scope="col" class="px-6 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Borrar</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Acciones</th>
                         </tr>
@@ -418,8 +423,11 @@
         // --- Referencias al DOM ---
         const views = document.querySelectorAll('.view-container');
         const navLinks = document.querySelectorAll('.nav-link');
-        const mobileNav = document.getElementById('mobileNav');
         const adminNavButton = document.getElementById('adminNavButton');
+        const mobileMenuButton = document.getElementById('mobileMenuButton');
+        const mobileMenuPanel = document.getElementById('mobileMenuPanel');
+        const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
+        const adminMobileNavButton = document.getElementById('adminMobileNavButton');
         const customerView = document.getElementById('customerView');
         const statusView = document.getElementById('statusView');
         const adminLoginView = document.getElementById('adminLoginView');
@@ -486,7 +494,6 @@
                     link.classList.add('text-gray-600');
                 }
             });
-            if(mobileNav.value !== viewId) mobileNav.value = viewId;
 
             // Re-inicializar los iconos cada vez que se cambia de vista por si hay nuevos
             if (typeof lucide !== 'undefined') lucide.createIcons();
@@ -496,7 +503,28 @@
             link.addEventListener('click', (e) => showView(e.target.dataset.view));
         });
         
-        mobileNav.addEventListener('change', (e) => showView(e.target.value));
+        // --- NUEVO: Lógica del Menú Móvil ---
+        mobileMenuButton.addEventListener('click', () => {
+            const isExpanded = mobileMenuButton.getAttribute('aria-expanded') === 'true';
+            mobileMenuButton.setAttribute('aria-expanded', !isExpanded);
+            mobileMenuPanel.classList.toggle('hidden-view');
+        });
+
+        mobileNavLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                showView(e.target.dataset.view);
+                mobileMenuPanel.classList.add('hidden-view'); // Ocultar menú al seleccionar
+                mobileMenuButton.setAttribute('aria-expanded', 'false');
+            });
+        });
+
+        // Cerrar menú móvil si se hace clic fuera
+        document.addEventListener('click', (e) => {
+            if (!mobileMenuButton.contains(e.target) && !mobileMenuPanel.contains(e.target)) {
+                mobileMenuPanel.classList.add('hidden-view');
+                mobileMenuButton.setAttribute('aria-expanded', 'false');
+            }
+        });
 
         // --- Lógica de Autenticación ---
         
@@ -509,9 +537,9 @@
                 console.log("Admin logueado:", user.email);
                 adminNavButton.textContent = "Dashboard";
                 adminNavButton.dataset.view = "adminDashboardView";
-                mobileNav.options[mobileNav.options.length - 1].text = "Dashboard";
-                mobileNav.options[mobileNav.options.length - 1].value = "adminDashboardView";
-                
+                adminMobileNavButton.textContent = "Dashboard";
+                adminMobileNavButton.dataset.view = "adminDashboardView";
+
                 if (!adminLoginView.classList.contains('hidden-view')) {
                     showView('adminDashboardView');
                 }
@@ -528,9 +556,9 @@
 
                 adminNavButton.textContent = "Admin";
                 adminNavButton.dataset.view = "adminLoginView";
-                mobileNav.options[mobileNav.options.length - 1].text = "Admin";
-                mobileNav.options[mobileNav.options.length - 1].value = "adminLoginView";
-                
+                adminMobileNavButton.textContent = "Admin";
+                adminMobileNavButton.dataset.view = "adminLoginView";
+
                 if (!adminDashboardView.classList.contains('hidden-view')) {
                     showView('adminLoginView');
                 }
@@ -958,16 +986,18 @@
                 }
                 
                 const row = `
-                    <tr class="hover:bg-gray-50 even:bg-gray-50">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800">${req.id}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${fecha}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${req.rfc}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${req.razonSocial}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${statusBadge}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-4 sm:px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-800 truncate" style="max-width: 100px;">${req.id}</div>
+                            <div class="text-xs text-gray-500">${fecha}</div>
+                        </td>
+                        <td class="hidden md:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-700">${req.rfc}</td>
+                        <td class="hidden lg:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-700">${req.razonSocial}</td>
+                        <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500">${statusBadge}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
                             <button data-id="${req.id}" class="delete-btn text-red-600 hover:text-red-800 transition-colors duration-200 text-sm font-medium" aria-label="Borrar solicitud ${req.id}">Borrar</button>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-right sm:text-left">
                             <button data-id="${req.id}" class="view-btn text-blue-600 hover:text-blue-800 transition-colors duration-200" aria-label="Ver detalles de solicitud ${req.id}">Ver / PDF</button>
                         </td>
                     </tr>
